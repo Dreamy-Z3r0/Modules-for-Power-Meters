@@ -7,6 +7,8 @@ TIMER_10MS_typedef TIMER_10MS =
 };
 
 
+
+unsigned char* txData;                        // UART internal variable for TX
 unsigned char* rxBuffer;                     // Received UART character
 
 void set_SMCLK(void)
@@ -17,7 +19,7 @@ void set_SMCLK(void)
        P1SEL1 |= BIT1; // SMCLK Pin Function
 }
 
-void TIMER_0_init(void){
+void TIMER_0_init(unsigned int i){
 
     /*
      * TASSEL_2: timer A clock source: SMCLK = 16.384 Mhz
@@ -27,15 +29,14 @@ void TIMER_0_init(void){
      */
 
     // Setup TA0
-    TA0CTL = TASSEL_2 | ID_1 | MC_1;
-    TA0CCR0 = 50000; // ((1million cycles/2)/1s * 1s/1000ms) -> t_pulse = 100ms
+    TA0CTL = TASSEL_2 | ID_3 | MC_1;
+    TA0CCR0 = 50000; // ((1million cycles/2)/1s * 1s/1000ms) -> t_pulse = 25ms
     TA0CCTL0 = CCIE; // enable interrupt
 
 }
 
-void TIMER_init(void){
+void TIMER_init(unsigned int a){
 
-    TA0CTL = TASSEL_2 | ID_1 | MC_1;
 
     // Setup TA1 for UART
     TA1CCR0 = 20000;   // t = t_pulse * 20000 = 10ms -
@@ -44,7 +45,8 @@ void TIMER_init(void){
 
 }
 
-// interrupt for TIMER0 //
+
+
 #if defined(__TI_COMPILER_VERSION__) || defined(__IAR_SYSTEMS_ICC__)
 #pragma vector=TIMER0_A0_VECTOR
 __interrupt void TA0_ISR(void)
@@ -54,11 +56,16 @@ void __attribute__ ((interrupt(TIMER0_A0_VECTOR))) TA0_ISR (void)
 #error Compiler not supported!
 #endif
 {
-    P1DIR |= BIT4;
-    P1OUT ^= BIT4;
-    TA0CCR0 += 50000;                   // Add offset to CCR0
+    while (1)
+    {
+        SD24CCTL2 |= SD24SC;                      // Start conversion
+        UCA0TXBUF = txData;
+        TA0R = 0;
+    }
 
 }
+
+
 
 // interrupt for TIMER1 //
 #if defined(__TI_COMPILER_VERSION__) || defined(__IAR_SYSTEMS_ICC__)
@@ -78,10 +85,12 @@ void __attribute__ ((interrupt(TIMER1_A0_VECTOR))) TA1_ISR (void)
     //UART0.read.length = UART0.read.count;
     //UART0.read.count = 0;
 
-    if(!(UCA0IFG & UCBUSY)){
-    while(!(UCA0FG & UCRXIFG));
-    rxBuffer = UCA0RXBUFF;
-    TA1R = 0;}
+    if(!(UCA0IFG & UCBUSY))
+    {
+        while(!(UCA0FG & UCRXIFG));
+        rxBuffer = UCA0RXBUFF;
+        TA1R = 0;
+    }
 
     //TA1CTL &= ~MC_1;  /* Timer A mode control: 0 - stop  - >  timer1 dis-anable*/
 
