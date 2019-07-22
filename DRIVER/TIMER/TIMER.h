@@ -1,3 +1,10 @@
+/*
+ * TIMER.h
+ *
+ *  Created on: Jul 15, 2019
+ *      Author: eeit2
+ */
+
 #ifndef DRIVER_TIMER_TIMER_H_
 #define DRIVER_TIMER_TIMER_H_
 
@@ -10,4 +17,3 @@ void set_SMCLK(void);
 
 
 #endif /* DRIVER_TIMER_TIMER_H_ */
-

@@ -1,11 +1,13 @@
+/*
+ * TIMER.c
+ *
+ *  Created on: Jul 15, 2019
+ *      Author: eeit2
+ */
+
+
 #include "DRIVER/TIMER/TIMER.h"
 #include "DRIVER/UART/UART.h"
-
-TIMER_10MS_typedef TIMER_10MS =
-{
-  .counter = 0,
-};
-
 
 
 unsigned char* txData;                        // UART internal variable for TX
@@ -37,6 +39,7 @@ void TIMER_0_init(unsigned int i){
 
 void TIMER_init(unsigned int a){
 
+    TA0CTL = TASSEL_2 | ID_3 | MC_1;
 
     // Setup TA1 for UART
     TA1CCR0 = 20000;   // t = t_pulse * 20000 = 10ms -
@@ -44,8 +47,6 @@ void TIMER_init(unsigned int a){
     TA1CTL = TASSEL_2 | ID_3;    // SMCLK/8, Up Mode
 
 }
-
-
 
 #if defined(__TI_COMPILER_VERSION__) || defined(__IAR_SYSTEMS_ICC__)
 #pragma vector=TIMER0_A0_VECTOR
@@ -62,10 +63,7 @@ void __attribute__ ((interrupt(TIMER0_A0_VECTOR))) TA0_ISR (void)
         UCA0TXBUF = txData;
         TA0R = 0;
     }
-
 }
-
-
 
 // interrupt for TIMER1 //
 #if defined(__TI_COMPILER_VERSION__) || defined(__IAR_SYSTEMS_ICC__)
@@ -77,21 +75,11 @@ void __attribute__ ((interrupt(TIMER1_A0_VECTOR))) TA1_ISR (void)
 #error Compiler not supported!
 #endif
 {
-    /*
-     *When timer overflow -> disable timer
-     */
-
-    //UART0.read.flag = UART_FLAG_ACTIVE;
-    //UART0.read.length = UART0.read.count;
-    //UART0.read.count = 0;
-
     if(!(UCA0IFG & UCBUSY))
     {
-        while(!(UCA0FG & UCRXIFG));
-        rxBuffer = UCA0RXBUFF;
+        while(!(UCA0IFG & UCRXIFG));
+        rxBuffer = UCA0RXBUF;
         TA1R = 0;
     }
-
     //TA1CTL &= ~MC_1;  /* Timer A mode control: 0 - stop  - >  timer1 dis-anable*/
-
 }
