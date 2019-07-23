@@ -15,16 +15,16 @@ void UART_init()
     P1SEL0 |= BIT2 | BIT3;
 
     // UART specific configuration
-    UCA0CTL1 |= UCSWRST;    // reset state enabling
-    UCA0CTL1 |= UCSSEL_2;   // choose SMCLK = 16.384MHz as UART clock source
+    UCA0CTLW0 |= UCSWRST;    // reset state enabling
+    UCA0CTLW0 |= (UCSSEL0 | UCSSEL1);   // choose SMCLK = 16.384MHz as UART clock source
     UCA0BR1 = 0;            // configure baud rate to 115200
     UCA0BR0 = 142;
     UCA0MCTLW = 0x2200;     // UCBRS0 = 0x22 and oversampling mode is disabled
     UCA0CTL1 &= ~UCSWRST;    // disable reset state
 
     // enable UART interrupt
-    UCA0IE |= UCTXIE;
-    UCA0IE |= UCRXIE;
+    // UCA0IE |= UCTXIE;
+    // UCA0IE |= UCRXIE;
 }
 
 void UART_write_buff(uint8_t *buff)
