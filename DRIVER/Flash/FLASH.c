@@ -62,8 +62,6 @@ void FLASH_update_temp(void)
 
 void FLASH_write_seg(uint16_t write_addr, uint16_t *value, uint8_t write_length)
 {
-
-    FLASH_erase_seg(write_addr);
     uint16_t *Flash_ptr;                    // Flash pointer
     Flash_ptr = (uint16_t *)write_addr;     // Initialize Flash pointer
 
@@ -71,7 +69,11 @@ void FLASH_write_seg(uint16_t write_addr, uint16_t *value, uint8_t write_length)
     {
         FCTL3 = FWKEY | LOCKSEG;            // Clear LOCKSEG bit
     }
-
+    // Erase the segment
+    FCTL1 = FWKEY | ERASE;                  // Set ERASE, to enable Segment Erase operation
+    *Flash_ptr = 0;                         // Dummy Write, to initiate Erase operation
+    while(FCTL3 & BUSY);
+    // Write to the segment
     FCTL1 = FWKEY | WRT;                    // Set WRT, to enable Write operation
     while(write_length--)
     {
