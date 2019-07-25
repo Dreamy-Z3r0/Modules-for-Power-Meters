@@ -20,7 +20,7 @@
  *              the CPU is held and everything else stops.
  *              2) the whole write operation switches on and off every
  *              character, as opposed to being switched on for the whole
- *              write operation.
+ *              write operation. Consequently, slowing the whole process.
  *
  *
  *  Software description:
