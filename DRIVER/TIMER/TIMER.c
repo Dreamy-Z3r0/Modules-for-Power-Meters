@@ -1,10 +1,10 @@
 /*
  * TIMER.c
  *
- *  Created on: Jul 22, 2019
- *      Author: eeit2
+ *  Created on: July 15, 2019
+ *      Author: Phương
  */
-#include<msp430.h>
+
 #include "TIMER.h"
 
 unsigned char* txData;                        // UART internal variable for TX
@@ -73,4 +73,3 @@ void __attribute__ ((interrupt(TIMER1_A0_VECTOR))) TA1_ISR (void)
         *rxBuffer++;
 //        TA1R = 0;
     }
-}

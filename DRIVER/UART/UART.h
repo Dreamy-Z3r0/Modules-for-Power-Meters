@@ -1,8 +1,8 @@
 /*
  * UART.h
  *
- *  Created on: Jul 15, 2019
- *      Author: USER
+ *  Created on: January 9, 2019
+ *      Author: Administrator
  */
 
 #ifndef DRIVER_UART_UART_H_

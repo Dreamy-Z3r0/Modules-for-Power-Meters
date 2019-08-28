@@ -1,3 +1,10 @@
+/*
+ * UART.c
+ *
+ *  Created on: January 9, 2019
+ *      Author: Administrator
+ */
+
 #include "UART.h"
 
 void UART_init()
@@ -67,6 +74,7 @@ void UART_input_number(float number)
 
     /* Sends converted number via UART */
     UART_input_String(string, flag+1);
+
     free(location_free);
 }
 
