@@ -5,6 +5,8 @@
  *      Author: Z3r0
  *
  *  Software description:
+ *      ENDPOINT_BREAKCASE(..): Process to be done at the end of 1 sampled AC cycle, called by SAMPLING_PROCESS(..) only.
+ *      SAMPLING_PROCESS(..): Analysis process whenever there is a new SD24 conversion result.
  *      RAW_DATA_PROCESSING(..): Convert from raw ADC data of voltage and current input to their real values.
  *                               Calculate internal temperature of MSP430i2041 microcontroller in Kelvin, degree Celsius, and degree Fahrenheit.
  *      FREQUENCY(..): Calculate frequency of the input AC signals.
@@ -14,17 +16,21 @@
  *      ANALYZE_LL(..): Function that calls all above functions to perform first-hand analysis of the measured system.
  */
 
-#include "../PROCESS/PROCESS.h"
-
 #ifndef DRIVER_ANALYZE_ANALYZE_H_
 #define DRIVER_ANALYZE_ANALYZE_H_
 
+#include "../SD24/SD24.h"
+
 #define SAMPLING_RATE 4000.0
-#define VALUE(RAW, OFFSET, REFERENCE) (((RAW * REFERENCE) / 0x7FFF) - OFFSET)
 #define DELTA_T(duration) ((2*duration)/3600)
 
-uint8_t INDEX = 0;
+#define ZERO_CONDITION_LOW(input)   (((0x8000 - 1008) <= input) & (input <= 0x8000))
+#define ZERO_CONDITION_HIGH(input)  ((0x8000 <= input) & ((0x8000 + 1008) <= input))
 
+void ENDPOINT_BREAKCASE(void);
+void SAMPLING_PROCESS(void);
+
+double_t VALUE(uint16_t RAW, double_t OFFSET);
 void RAW_DATA_PROCESSING(void);
 void FREQUENCY(void);
 void RMS_VALUES(void);
