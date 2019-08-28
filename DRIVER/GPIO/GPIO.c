@@ -62,7 +62,7 @@ void set_MCLK(void)
     CSCTL1 = DIVM_0;
 }
 
-void delay_sec(uint32_t duration)
+void delay_second(uint32_t duration)
 {
     set_MCLK();     // Ensure MCLK = 16.384MHz
 
@@ -83,3 +83,6 @@ void delay_ms(uint32_t duration)
         duration--;
     }   while (duration > 0);
 }
+
+
+

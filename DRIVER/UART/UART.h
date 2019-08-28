@@ -1,17 +1,17 @@
 /*
  * UART.h
  *
- *  Created on: 9 thg 1, 2019
+ *  Created on: January 9, 2019
  *      Author: Administrator
  */
 
-#include <msp430.h>
-#include <stdint.h>
-#include <stdlib.h>
-#include <math.h>
-
 #ifndef DRIVER_UART_UART_H_
 #define DRIVER_UART_UART_H_
+
+#include <msp430.h>
+#include <stdlib.h>
+#include <stdint.h>
+#include <math.h>
 
 void UART_init();
 void UART_write_buff(uint8_t *buff);

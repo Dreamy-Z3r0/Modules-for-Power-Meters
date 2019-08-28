@@ -8,14 +8,8 @@
 #ifndef DRIVER_PROCESS_PROCESS_H_
 #define DRIVER_PROCESS_PROCESS_H_
 
-#include <msp430.h>
-#include <stdint.h>
-#include <math.h>
+#include "../ANALYZE/ANALYZE.h"
 
-#include "GPIO/GPIO.h"
-#include "TIMER/TIMER.h"
-#include "UART/UART.h"
-
-
+void OPERATION(void);
 
 #endif /* DRIVER_PROCESS_PROCESS_H_ */

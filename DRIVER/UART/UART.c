@@ -1,7 +1,7 @@
 /*
  * UART.c
  *
- *  Created on: 9 thg 1, 2019
+ *  Created on: January 9, 2019
  *      Author: Administrator
  */
 
@@ -9,10 +9,8 @@
 
 void UART_init()
 {
-    WDTCTL = WDTPW | WDTHOLD;   // stop watchdog timer
-
     P1SEL1 &= ~(BIT2 | BIT3); // configure P1.2 and P1.3 for UART communication (RXD and TXD pins, respectively)
-    P1SEL0 |= BIT2 | BIT3;
+    P1SEL0 |=  (BIT2 | BIT3);
 
     // UART specific configuration
     UCA0CTLW0 |= UCSWRST;    // reset state enabling
@@ -22,9 +20,8 @@ void UART_init()
     UCA0MCTLW = 0x2200;     // UCBRS0 = 0x22 and oversampling mode is disabled
     UCA0CTL1 &= ~UCSWRST;    // disable reset state
 
-    // enable UART interrupt
-    // UCA0IE |= UCTXIE;
-    // UCA0IE |= UCRXIE;
+    // Enable UART interrupt
+     UCA0IE |= UCRXIE;
 }
 
 void UART_write_buff(uint8_t *buff)
@@ -39,7 +36,7 @@ void UART_write_buff(uint8_t *buff)
 void UART_input_String(uint8_t *buff, uint8_t buff_length)
 {
     int index;
-    for (index = 0; index < buff_length; index++)
+    for (index = 0; index < buff_length - 1; index++)
     {
         UART_write_buff(buff);
         buff++;
@@ -76,7 +73,8 @@ void UART_input_number(float number)
     itoa((unsigned int) (number * 100), power, location, 10);
 
     /* Sends converted number via UART */
-    UART_input_String(string, flag);
+    UART_input_String(string, flag+1);
+
     free(location_free);
 }
 
@@ -109,4 +107,23 @@ void itoa(unsigned int number, int number_length, uint8_t *string, int base)
             number_length--;
         }
     }
+}
+
+#if defined(__TI_COMPILER_VERSION__) || defined(__IAR_SYSTEMS_ICC__)
+#pragma vector=USCI_A0_VECTOR
+__interrupt void USCI_A0_ISR(void)
+#elif defined(__GNUC__)
+void __attribute__ ((interrupt(USCI_A0_VECTOR))) USCI_A0_ISR (void)
+#else
+#error Compiler not supported!
+#endif
+{
+  switch(__even_in_range(UCA0IV, USCI_UART_UCTXCPTIFG))
+  {
+    case USCI_NONE: break;
+    case USCI_UART_UCRXIFG: break;
+    case USCI_UART_UCTXIFG: break;
+    case USCI_UART_UCSTTIFG: break;
+    case USCI_UART_UCTXCPTIFG: break;
+  }
 }

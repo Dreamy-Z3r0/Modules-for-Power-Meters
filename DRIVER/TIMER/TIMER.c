@@ -1,51 +1,47 @@
 /*
  * TIMER.c
  *
- *  Created on: Jul 15, 2019
- *      Author: eeit2
+ *  Created on: July 15, 2019
+ *      Author: Phương
  */
 
-
-#include "DRIVER/TIMER/TIMER.h"
-#include "DRIVER/UART/UART.h"
-
+#include "TIMER.h"
 
 unsigned char* txData;                        // UART internal variable for TX
 unsigned char* rxBuffer;                     // Received UART character
 
-void set_SMCLK(void)
+COUNTER_typedef COUNTER =
 {
-       CSCTL0 = 0;  //Internal resistor
-       CSCTL1 |= DIVS__2; // SMCLK = DCO/2
-       P1DIR =|= BIT1;
-       P1SEL1 |= BIT1; // SMCLK Pin Function
+ .COUNT = 0,
+};
+
+void TIMER_0_init(void)
+{
+    TA0CTL |= TACLR;        // Clear configuration for Timer_A0
+
+    TA0CTL |=  TASSEL1;     // Set timer clock source to SMCLK (= 16.384MHz)
+    TA0CTL &= ~TASSEL0;
+
+    TA0CTL |= (ID1 | ID0);  // Set input divider for clock source to 8 => CLOCK = 16.384MHz/8 = 2.048MHz
+
+    TA0CTL |=  MC1;     // Timer_A0 operates in continuous mode
+    TA0CTL &= ~MC0;
+
+    TA0CTL |= TAIE;     // Enable Timer_A interrupt
 }
 
-void TIMER_0_init(unsigned int i){
-
-    /*
-     * TASSEL_2: timer A clock source: SMCLK = 16.384 Mhz
-     * MC_1: timer A mode control: Up mode -> Timer counts to TAxCCR0
-     * ID_1: timer A input divider: 1 -> f_clock_source/2
-     * f_clock = 1 MHz -> t_pulse = 100ms
-     */
-
-    // Setup TA0
-    TA0CTL = TASSEL_2 | ID_3 | MC_1;
-    TA0CCR0 = 50000; // ((1million cycles/2)/1s * 1s/1000ms) -> t_pulse = 25ms
-    TA0CCTL0 = CCIE; // enable interrupt
-
+void TIMER_0_stop(void)
+{
+    TA0CTL &= ~(MC1 | MC0);     // Stop Timer_A0
 }
 
-void TIMER_init(unsigned int a){
-
-    TA0CTL = TASSEL_2 | ID_3 | MC_1;
-
-    // Setup TA1 for UART
-    TA1CCR0 = 20000;   // t = t_pulse * 20000 = 10ms -
-    TA1CCTL0 = CCIE;   // enable Capture/compare interrupt
-    TA1CTL = TASSEL_2 | ID_3;    // SMCLK/8, Up Mode
-
+void TIMER_1_init(void)
+{
+    TA1CTL |= TACLR;
+    TA1CTL = TASSEL_2 | ID_2 | MC_1;
+    TA1CCR0 = 20000;
+    TA1CCTL0 |= CCIE | CM_0;
+    TA1CTL |= TAIE;
 }
 
 #if defined(__TI_COMPILER_VERSION__) || defined(__IAR_SYSTEMS_ICC__)
@@ -57,15 +53,9 @@ void __attribute__ ((interrupt(TIMER0_A0_VECTOR))) TA0_ISR (void)
 #error Compiler not supported!
 #endif
 {
-    while (1)
-    {
-        SD24CCTL2 |= SD24SC;                      // Start conversion
-        UCA0TXBUF = txData;
-        TA0R = 0;
-    }
+    COUNTER.COUNT++;
 }
 
-// interrupt for TIMER1 //
 #if defined(__TI_COMPILER_VERSION__) || defined(__IAR_SYSTEMS_ICC__)
 #pragma vector=TIMER1_A0_VECTOR
 __interrupt void TA1_ISR(void)
@@ -75,11 +65,11 @@ void __attribute__ ((interrupt(TIMER1_A0_VECTOR))) TA1_ISR (void)
 #error Compiler not supported!
 #endif
 {
-    if(!(UCA0IFG & UCBUSY))
+    if (!(UCA0IFG & UCBUSY))
     {
-        while(!(UCA0IFG & UCRXIFG));
-        rxBuffer = UCA0RXBUF;
-        TA1R = 0;
+        while (!(UCA0IFG & UCRXIFG))
+            ;
+        *rxBuffer = UCA0RXBUF;
+        *rxBuffer++;
+//        TA1R = 0;
     }
-    //TA1CTL &= ~MC_1;  /* Timer A mode control: 0 - stop  - >  timer1 dis-anable*/
-}

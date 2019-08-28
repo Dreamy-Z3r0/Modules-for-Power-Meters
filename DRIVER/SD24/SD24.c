@@ -14,7 +14,6 @@
  *      SD24_init(..): Initiate SD24 Sigma Delta 24 Function on MSP430i2041,
  *                     including function configuration on first run,
  *                     and/or starting conversion of second run onwards.
- *      SD24_stop(..): Stop any running SD24 function.
  */
 
 #include "SD24.h"
@@ -22,10 +21,12 @@
 Power_Meter_typedef POWER_METER =
 {
  .INDEX = 0,
- .ConversionFlag = ACTIVE_STATE,
 
  .processed.Vref = 1.2,
  .processed.energy = 0,
+
+ .ConversionFlag = INACTIVE_STATE,
+ .ResultReady = INACTIVE_STATE,
 
  .GAIN_CHN_V = 1,
  .GAIN_CHN_I = 1,
@@ -37,6 +38,10 @@ Power_Meter_typedef POWER_METER =
 
 void SD24_init(void)
 {
+    POWER_METER.INDEX = 0;
+    POWER_METER.ConversionFlag = ACTIVE_STATE;
+//    TIMER_0_init();
+
 #ifndef FIRST_RUN
 #define FIRST_RUN 0
         SD24CTL |= SD24REFS;    // Internal reference chosen, Vref = 1.2V
@@ -58,7 +63,7 @@ void SD24_init(void)
         SD24INCTL2 |= (SD24INCH2 | SD24INCH1); // Choose A0.6 as input source - internal temperature sensor
         SD24INCTL2 &= ~SD24INCH0;
 
-        SD24CCTL2 |= SD24IE; // Enable interrupt and start conversions
+        SD24CCTL2 |= (SD24SC | SD24IE); // Enable interrupt and start conversions
         /* End of Channel 2 initiallization */
 
 
@@ -99,22 +104,14 @@ void SD24_init(void)
         SD24CCTL1 |= (SD24SC | SD24IE); // Enable interrupt and start conversions
         /* End of Channel 1 initiallization */
 
-
-        __delay_cycles(3277);   // MCLK = 16.384MHz by default is used for this delay function. Total delay time = 224us (since ~200us is required)
+        __delay_cycles(3277);   // MCLK = 16.384MHz by default is used for this delay function. Total delay time = 200.01us (since ~200us is required)
 
 #else
         SD24CCTL1 |= SD24SC;    // Start conversions for second run onwards
 
 #endif
-}
 
-void SD24_stop(void)
-{
-    if (SD24SC == (SD24CCTL1 & SD24SC))
-    {
-        SD24CCTL1 &= ~SD24SC;
-        POWER_METER.ConversionFlag = INACTIVE_STATE;
-    }
+        TIMER_0_init();
 }
 
 #if defined(__TI_COMPILER_VERSION__) || defined(__IAR_SYSTEMS_ICC__)
@@ -135,60 +132,15 @@ void __attribute__ ((interrupt(SD24_VECTOR))) SD24_ISR (void)
     case SD24IV_SD24MEM0:
         break;
     case SD24IV_SD24MEM1:
+        P1OUT ^= BIT5;
+
         POWER_METER.sampling.voltage[POWER_METER.INDEX] = SD24MEM0;
         POWER_METER.sampling.current[POWER_METER.INDEX] = SD24MEM1;
 
-        if (ZERO_CONDITION_LOW(POWER_METER.sampling.voltage[POWER_METER.INDEX]))
-        {
-#ifndef SIGN
-#define SIGN 0
-#endif
-            POWER_METER.INDEX++;
-        }
-        else if (ZERO_CONDITION_HIGH(POWER_METER.sampling.voltage[POWER_METER.INDEX]))
-        {
-#ifndef SIGN
-#define SIGN 1
-#endif
-            POWER_METER.INDEX++;
-        }
-
-        if (70 >= POWER_METER.INDEX)
-        {
-            switch (SIGN)
-            {
-            case 0:
-                if (ZERO_CONDITION_LOW(POWER_METER.sampling.voltage[POWER_METER.INDEX]))
-                {
-                    SD24_stop();
-                    POWER_METER.END_POINT = POWER_METER.INDEX - 1;
-                    POWER_METER.INDEX = 0;
-
-                    SD24CCTL2 |= SD24SC;
-                }
-                else
-                    POWER_METER.INDEX++;
-                break;
-            case 1:
-                if (ZERO_CONDITION_HIGH(POWER_METER.sampling.voltage[POWER_METER.INDEX]))
-                {
-                    SD24_stop();
-                    POWER_METER.END_POINT = POWER_METER.INDEX - 1;
-                    POWER_METER.INDEX = 0;
-
-                    SD24CCTL2 |= SD24SC;
-                }
-                else
-                    POWER_METER.INDEX++;
-                break;
-            default:
-                break;
-            }
-        }
-        POWER_METER.sampling.temperature = SD24MEM2;
+        POWER_METER.ResultReady = ACTIVE_STATE;
         break;
     case SD24IV_SD24MEM2:
-
+        POWER_METER.sampling.temperature = SD24MEM2;
         break;
     case SD24IV_SD24MEM3:
         break;

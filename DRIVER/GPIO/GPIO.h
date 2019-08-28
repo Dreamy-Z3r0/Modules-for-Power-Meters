@@ -20,6 +20,9 @@
 #ifndef DRIVER_GPIO_GPIO_H_
 #define DRIVER_GPIO_GPIO_H_
 
+#include <msp430.h>
+#include <stdint.h>
+
 #define LED_RUN     0x00
 #define LED_ERROR   0x01
 
@@ -31,7 +34,7 @@ void GPIO_init(void);
 void GPIO_operation(uint8_t led, uint8_t operation);
 
 void set_MCLK(void);
-void delay_sec(uint32_t duration)
+void delay_second(uint32_t duration);
 void delay_ms(uint32_t duration);
 
 #endif /* DRIVER_GPIO_GPIO_H_ */

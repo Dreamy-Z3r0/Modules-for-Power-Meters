@@ -8,12 +8,18 @@
 #ifndef DRIVER_TIMER_TIMER_H_
 #define DRIVER_TIMER_TIMER_H_
 
-#include "DRIVER/PROCESS/PROCESS.h"
+#include "../UART/UART.h"
+
+typedef struct
+{
+    int COUNT;
+} COUNTER_typedef;
+
+extern COUNTER_typedef COUNTER;
 
 
-void TIMER_init(void);
 void TIMER_0_init(void);
-void set_SMCLK(void);
-
+void TIMER_0_stop(void);
+void TIMER_0_init(void);
 
 #endif /* DRIVER_TIMER_TIMER_H_ */
