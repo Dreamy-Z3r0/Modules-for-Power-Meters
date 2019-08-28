@@ -14,36 +14,33 @@
  *      SD24_init(..): Initiate SD24 Sigma Delta 24 Function on MSP430i2041,
  *                     including function configuration on first run,
  *                     and/or starting conversion of second run onwards.
- *      SD24_stop(..): Stop any running SD24 function.
  */
-
-#include "../PROCESS/PROCESS.h"
 
 #ifndef DRIVER_SD24_SD24_H_
 #define DRIVER_SD24_SD24_H_
 
-#define ARRAY_SIZE     90
+#include "../TIMER/TIMER.h"
+#include "../GPIO/GPIO.h"
+
+#define ARRAY_SIZE     85
 
 #define ACTIVE_STATE   0x01
 #define INACTIVE_STATE 0x00
 
-#define ZERO_CONDITION_LOW(input)   (((0x8000 - 819) <= input) & (input <= 0x8000))
-#define ZERO_CONDITION_HIGH(input)  ((0x8000 <= input) & ((0x8000 + 819) <= input))
-
 typedef struct
 {
-    double_t Vref;
-    double_t frequency;
-    double_t V_rms;
-    double_t I_rms;
-    double_t THD;
-    double_t voltage[ARRAY_SIZE];
-    double_t current[ARRAY_SIZE];
-    double_t power_real;
-    double_t power_active;
-    double_t power_factor;
-    double_t energy;
-    double_t temperature[3];
+    float Vref;
+    float frequency;
+    float V_rms;
+    float I_rms;
+    float THD;
+    float voltage[ARRAY_SIZE];
+    float current[ARRAY_SIZE];
+    float power_real;
+    float power_active;
+    float power_factor;
+    float energy;
+    float temperature[3];
 } Processing_Result;
 
 typedef struct
@@ -55,14 +52,18 @@ typedef struct
 
 typedef struct
 {
-    uint8_t INDEX;
     uint8_t ConversionFlag;
+    uint8_t ResultReady;
+
+    uint8_t INDEX;
+    uint8_t SIGN;
+
     uint8_t GAIN_CHN_V;
     uint8_t GAIN_CHN_I;
     uint8_t GAIN_CHN_TEM;
     uint8_t END_POINT;
     double_t SamplingDuration;
-    double_t TemperatureOffset;
+    float TemperatureOffset;
     double_t TCsensor;
 
     Measured_Data sampling;
@@ -72,6 +73,5 @@ typedef struct
 extern Power_Meter_typedef POWER_METER;
 
 void SD24_init(void);
-void SD24_stop(void);
 
 #endif /* DRIVER_SD24_SD24_H_ */
