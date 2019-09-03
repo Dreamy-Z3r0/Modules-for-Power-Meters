@@ -22,7 +22,7 @@
 #include "../TIMER/TIMER.h"
 #include "../GPIO/GPIO.h"
 
-#define ARRAY_SIZE     85
+#define ARRAY_SIZE     90
 
 #define ACTIVE_STATE   0x01
 #define INACTIVE_STATE 0x00
@@ -56,13 +56,18 @@ typedef struct
     uint8_t ResultReady;
 
     uint8_t INDEX;
+    uint8_t END_POINT;
+
     uint8_t SIGN;
+    uint8_t FIRST_RUN;
 
     uint8_t GAIN_CHN_V;
     uint8_t GAIN_CHN_I;
     uint8_t GAIN_CHN_TEM;
-    uint8_t END_POINT;
+
     double_t SamplingDuration;
+    double_t ProcessDuration;
+
     float TemperatureOffset;
     double_t TCsensor;
 
