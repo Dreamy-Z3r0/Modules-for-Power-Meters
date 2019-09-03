@@ -20,6 +20,5 @@ extern COUNTER_typedef COUNTER;
 
 void TIMER_0_init(void);
 void TIMER_0_stop(void);
-void TIMER_0_init(void);
 
 #endif /* DRIVER_TIMER_TIMER_H_ */

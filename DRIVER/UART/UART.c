@@ -1,10 +1,3 @@
-/*
- * UART.c
- *
- *  Created on: January 9, 2019
- *      Author: Administrator
- */
-
 #include "UART.h"
 
 void UART_init()
@@ -18,10 +11,7 @@ void UART_init()
     UCA0BR1 = 0;            // configure baud rate to 115200
     UCA0BR0 = 142;
     UCA0MCTLW = 0x2200;     // UCBRS0 = 0x22 and oversampling mode is disabled
-    UCA0CTL1 &= ~UCSWRST;    // disable reset state
-
-    // Enable UART interrupt
-     UCA0IE |= UCRXIE;
+    UCA0CTLW0 &= ~UCSWRST;  // disable reset state
 }
 
 void UART_write_buff(uint8_t *buff)
@@ -74,8 +64,21 @@ void UART_input_number(float number)
 
     /* Sends converted number via UART */
     UART_input_String(string, flag+1);
-
     free(location_free);
+}
+
+void Printf(uint16_t number)
+{
+    uint8_t info[2];
+
+    info[0] = 0x0D;
+    info[1] = 0x0A;
+
+//    info[0] = (uint8_t)((number & 0xFF00) >> 8);
+//    info[1] = (uint8_t)(number & 0x00FF);
+
+    UART_input_number(number/100.0);
+    UART_input_String(info, 3);
 }
 
 void itoa(unsigned int number, int number_length, uint8_t *string, int base)
@@ -107,23 +110,4 @@ void itoa(unsigned int number, int number_length, uint8_t *string, int base)
             number_length--;
         }
     }
-}
-
-#if defined(__TI_COMPILER_VERSION__) || defined(__IAR_SYSTEMS_ICC__)
-#pragma vector=USCI_A0_VECTOR
-__interrupt void USCI_A0_ISR(void)
-#elif defined(__GNUC__)
-void __attribute__ ((interrupt(USCI_A0_VECTOR))) USCI_A0_ISR (void)
-#else
-#error Compiler not supported!
-#endif
-{
-  switch(__even_in_range(UCA0IV, USCI_UART_UCTXCPTIFG))
-  {
-    case USCI_NONE: break;
-    case USCI_UART_UCRXIFG: break;
-    case USCI_UART_UCTXIFG: break;
-    case USCI_UART_UCSTTIFG: break;
-    case USCI_UART_UCTXCPTIFG: break;
-  }
 }

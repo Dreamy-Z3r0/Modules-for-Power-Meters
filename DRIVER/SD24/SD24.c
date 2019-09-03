@@ -21,6 +21,7 @@
 Power_Meter_typedef POWER_METER =
 {
  .INDEX = 0,
+ .FIRST_RUN = 2,
 
  .processed.Vref = 1.2,
  .processed.energy = 0,
@@ -40,10 +41,10 @@ void SD24_init(void)
 {
     POWER_METER.INDEX = 0;
     POWER_METER.ConversionFlag = ACTIVE_STATE;
-//    TIMER_0_init();
 
-#ifndef FIRST_RUN
-#define FIRST_RUN 0
+    if (2 == POWER_METER.FIRST_RUN)
+    {
+        POWER_METER.FIRST_RUN = 0;
         SD24CTL |= SD24REFS;    // Internal reference chosen, Vref = 1.2V
 
         /* Initiate configurations for SD24 Internal Temperature Sensor channel 2 */
@@ -52,7 +53,7 @@ void SD24_init(void)
 
         SD24CCTL2 &= ~(SD24OSR1 | SD24OSR0);  // Ensure Oversampling Ratio = 256
 
-        SD24CCTL2 &= ~SD24LSBTOG;   // Disable toggling SD24 Least-Significant Bits Access
+        SD24CCTL2 &= ~SD24LSBTOG; // Disable toggling SD24 Least-Significant Bits Access
         SD24CCTL2 &= ~SD24LSBACC;   // Data read from Most-Significant Bits
 
         SD24CCTL2 |= SD24DF;        // Two's complement mode chosen
@@ -66,7 +67,6 @@ void SD24_init(void)
         SD24CCTL2 |= (SD24SC | SD24IE); // Enable interrupt and start conversions
         /* End of Channel 2 initiallization */
 
-
         /* Initiate configurations for SD24 channel 0 */
         SD24CCTL0 &= ~SD24SNGL;     // Continuous conversion mode
         SD24CCTL0 |= SD24GRP; // Multiple channel mode, Channel 0 is a follower.
@@ -78,12 +78,12 @@ void SD24_init(void)
 
         SD24CCTL0 &= ~SD24DF;       // Offset binary mode chosen
 
-        SD24INCTL0 &= ~(SD24GAIN2 | SD24GAIN1 | SD24GAIN0); // Pre-amplifier gain = 1
-        POWER_METER.GAIN_CHN_V = 1;
+        SD24INCTL0 &= ~(SD24GAIN0 | SD24GAIN1); // Pre-amplifier gain = 16
+        SD24INCTL0 |= SD24GAIN2;
+        POWER_METER.GAIN_CHN_V = 16;
 
         SD24INCTL0 &= ~(SD24INCH2 | SD24INCH1 | SD24INCH0); // Choose A0.0 as input source
         /* End of Channel 0 initiallization */
-
 
         /* Initiate configurations for SD24 channel 1 */
         SD24CCTL1 &= ~SD24SNGL;     // Continuous conversion mode
@@ -102,16 +102,13 @@ void SD24_init(void)
         SD24INCTL1 &= ~(SD24INCH2 | SD24INCH1 | SD24INCH0); // Choose A0.0 as input source
 
         SD24CCTL1 |= (SD24SC | SD24IE); // Enable interrupt and start conversions
+        SD24CCTL2 |= SD24SC;
         /* End of Channel 1 initiallization */
 
-        __delay_cycles(3277);   // MCLK = 16.384MHz by default is used for this delay function. Total delay time = 200.01us (since ~200us is required)
-
-#else
+        __delay_cycles(3277); // MCLK = 16.384MHz by default is used for this delay function. Total delay time = 200.01us (since ~200us is required)
+    }
+    else
         SD24CCTL1 |= SD24SC;    // Start conversions for second run onwards
-
-#endif
-
-        TIMER_0_init();
 }
 
 #if defined(__TI_COMPILER_VERSION__) || defined(__IAR_SYSTEMS_ICC__)
@@ -132,8 +129,6 @@ void __attribute__ ((interrupt(SD24_VECTOR))) SD24_ISR (void)
     case SD24IV_SD24MEM0:
         break;
     case SD24IV_SD24MEM1:
-        P1OUT ^= BIT5;
-
         POWER_METER.sampling.voltage[POWER_METER.INDEX] = SD24MEM0;
         POWER_METER.sampling.current[POWER_METER.INDEX] = SD24MEM1;
 

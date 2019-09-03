@@ -24,8 +24,8 @@
 #define SAMPLING_RATE 4000.0
 #define DELTA_T(duration) ((2*duration)/3600)
 
-#define ZERO_CONDITION_LOW(input)   (((0x8000 - 1008) <= input) & (input <= 0x8000))
-#define ZERO_CONDITION_HIGH(input)  ((0x8000 <= input) & ((0x8000 + 1008) <= input))
+#define ZERO_CONDITION_LOW(input)   (((0x8000 - 881) <= input) & (input <= 0x8000))
+#define ZERO_CONDITION_HIGH(input)  ((0x8000 <= input) & (input <= (0x8000 + 881)))
 
 void ENDPOINT_BREAKCASE(void);
 void SAMPLING_PROCESS(void);
