@@ -22,10 +22,10 @@ void ENDPOINT_BREAKCASE(void)
 {
     SD24CCTL1 &= ~SD24SC;
 
-    //TIMER_0_stop();
-    //POWER_METER.SamplingDuration = (COUNTER.COUNT * 0.004) + (TA0R / 16384000.0);
+    TIMER_0_stop();
+    POWER_METER.SamplingDuration = (COUNTER.COUNT * 0.032) + (TA0R / 2048000.0);
 
-    //TIMER_0_init();
+    TIMER_0_init();
 
     POWER_METER.END_POINT = POWER_METER.INDEX;
 
@@ -51,7 +51,7 @@ void SAMPLING_PROCESS(void)
         case 0:     // 0 == FIRST_RUN   -> SIGN not assigned
             if (ZERO_CONDITION_HIGH(POWER_METER.sampling.voltage[POWER_METER.INDEX])) // Check zero condition
             {
-                //TIMER_0_init();         // Start Timer
+                TIMER_0_init();         // Start Timer
 
                 POWER_METER.SIGN = 1;
                 POWER_METER.INDEX++;
@@ -60,7 +60,7 @@ void SAMPLING_PROCESS(void)
             }
             else if (ZERO_CONDITION_LOW(POWER_METER.sampling.voltage[POWER_METER.INDEX])) // Check zero condition
             {
-                //TIMER_0_init();         // Start Timer
+                TIMER_0_init();         // Start Timer
 
                 POWER_METER.SIGN = 0;
                 POWER_METER.INDEX++;
@@ -74,14 +74,14 @@ void SAMPLING_PROCESS(void)
             case 0:     // 0 == SIGN
                 if (ZERO_CONDITION_LOW(POWER_METER.sampling.voltage[POWER_METER.INDEX])) // Check zero condition
                 {
-                    //TIMER_0_init();         // Start Timer
+                    TIMER_0_init();         // Start Timer
                     POWER_METER.INDEX++;
                 }
                 break;  // End of case 0, switch(SIGN)
             case 1:     // 1 == SIGN
                 if (ZERO_CONDITION_HIGH(POWER_METER.sampling.voltage[POWER_METER.INDEX])) // Check zero condition
                 {
-                    //TIMER_0_init();         // Start Timer
+                    TIMER_0_init();         // Start Timer
                     POWER_METER.INDEX++;
                 }
                 break;  // End of case 1, switch(SIGN)

@@ -20,7 +20,7 @@ void OPERATION(void)
         if (INACTIVE_STATE == POWER_METER.ConversionFlag)
         {
             GPIO_operation(LED_RUN, LED_ON);
-//            ANALYZE_LL();
+            ANALYZE_LL();
 //
 //            UART_input_String(" f = ", sizeof(" f = "));
 //            UART_input_number(POWER_METER.processed.frequency);
@@ -53,16 +53,14 @@ void OPERATION(void)
 //
 //            GPIO_operation(LED_RUN, LED_OFF);
 
-//            POWER_METER.SamplingDuration *= (2.0/3);
-//
 //            do
 //            {
-//                POWER_METER.ProcessDuration = (COUNTER.COUNT * 0.004) + (TA0R / 16384000.0);
+//                POWER_METER.ProcessDuration = (COUNTER.COUNT * 0.032) + (TA0R / 2048000.0);
 //            } while (POWER_METER.ProcessDuration < POWER_METER.SamplingDuration);
-//
-//            TIMER_0_stop();
 
-            __delay_cycles(218453);
+            while (TA0R < 30720);
+//
+            TIMER_0_stop();
 
             SD24_init();
         }
