@@ -21,14 +21,20 @@
 void ENDPOINT_BREAKCASE(void)
 {
     SD24CCTL1 &= ~SD24SC;
-    TIMER_0_stop();
 
-    POWER_METER.END_POINT = POWER_METER.INDEX - 1;
-    POWER_METER.INDEX = 0;
+    //TIMER_0_stop();
+    //POWER_METER.SamplingDuration = (COUNTER.COUNT * 0.004) + (TA0R / 16384000.0);
 
-    POWER_METER.SamplingDuration = (COUNTER.COUNT * 0.004) + (TA0R / 16384000.0);
+    //TIMER_0_init();
+
+    POWER_METER.END_POINT = POWER_METER.INDEX;
 
     POWER_METER.ConversionFlag = INACTIVE_STATE;
+
+    for (POWER_METER.INDEX = 0; POWER_METER.INDEX < POWER_METER.END_POINT; POWER_METER.INDEX++)
+    {
+        Printf(POWER_METER.sampling.voltage[POWER_METER.INDEX]);
+    }
 
     SD24CCTL2 |= SD24SC;
 }
@@ -36,59 +42,79 @@ void ENDPOINT_BREAKCASE(void)
 void SAMPLING_PROCESS(void)
 {
     POWER_METER.ResultReady = INACTIVE_STATE;
+    GPIO_operation(LED_RUN, LED_TOGGLE);
 
     if (0 == POWER_METER.INDEX)
     {
-        if (ZERO_CONDITION_HIGH(POWER_METER.sampling.voltage[POWER_METER.INDEX]))
+        switch (POWER_METER.FIRST_RUN)
         {
-            POWER_METER.INDEX++;
-#ifdef FIRST_RUN
-            if (0 == FIRST_RUN)
+        case 0:     // 0 == FIRST_RUN   -> SIGN not assigned
+            if (ZERO_CONDITION_HIGH(POWER_METER.sampling.voltage[POWER_METER.INDEX])) // Check zero condition
             {
+                //TIMER_0_init();         // Start Timer
+
                 POWER_METER.SIGN = 1;
-#undef FIRST_RUN
-#define FIRST_RUN 1
+                POWER_METER.INDEX++;
+
+                POWER_METER.FIRST_RUN = 1;
             }
-#endif
-        }
-        else if (ZERO_CONDITION_LOW(POWER_METER.sampling.voltage[POWER_METER.INDEX]))
-        {
-            POWER_METER.INDEX++;
-#ifdef FIRST_RUN
-            if (0 == FIRST_RUN)
+            else if (ZERO_CONDITION_LOW(POWER_METER.sampling.voltage[POWER_METER.INDEX])) // Check zero condition
             {
-                POWER_METER.SIGN = 0
-#undef FIRST_RUN
-#define FIRST_RUN 1
+                //TIMER_0_init();         // Start Timer
+
+                POWER_METER.SIGN = 0;
+                POWER_METER.INDEX++;
+
+                POWER_METER.FIRST_RUN = 1;
             }
-#endif
+            break;  // End of case 0, switch (FIRST_RUN)
+        case 1:     // 1 == FIRST_RUN   -> SIGN assigned
+            switch (POWER_METER.SIGN)
+            {
+            case 0:     // 0 == SIGN
+                if (ZERO_CONDITION_LOW(POWER_METER.sampling.voltage[POWER_METER.INDEX])) // Check zero condition
+                {
+                    //TIMER_0_init();         // Start Timer
+                    POWER_METER.INDEX++;
+                }
+                break;  // End of case 0, switch(SIGN)
+            case 1:     // 1 == SIGN
+                if (ZERO_CONDITION_HIGH(POWER_METER.sampling.voltage[POWER_METER.INDEX])) // Check zero condition
+                {
+                    //TIMER_0_init();         // Start Timer
+                    POWER_METER.INDEX++;
+                }
+                break;  // End of case 1, switch(SIGN)
+            default:    // default case, never occurs
+                break;  // End of default case, switch(SIGN)
+            }
+            break;
+        default:    // default case, never occurs
+            break;  // End of default, switch (FIRST_RUN)
+
         }
     }
-    else if (70 >= POWER_METER.INDEX)
+    else if (70 <= POWER_METER.INDEX)
     {
         switch (POWER_METER.SIGN)
         {
-        case 1:
-            if (ZERO_CONDITION_HIGH(POWER_METER.sampling.voltage[POWER_METER.INDEX]))
-            {
+        case 0:     // 0 == SIGN
+            if (ZERO_CONDITION_LOW(POWER_METER.sampling.voltage[POWER_METER.INDEX])) // Check zero condition
                 ENDPOINT_BREAKCASE();
-            }
             else
                 POWER_METER.INDEX++;
-            break;
-        case 0:
-            if (ZERO_CONDITION_LOW(POWER_METER.sampling.voltage[POWER_METER.INDEX]))
-            {
+            break;  // End of case 0, switch(SIGN)
+        case 1:     // 1 == SIGN
+            if (ZERO_CONDITION_HIGH(POWER_METER.sampling.voltage[POWER_METER.INDEX])) // Check zero condition
                 ENDPOINT_BREAKCASE();
-            }
             else
                 POWER_METER.INDEX++;
-            break;
-        default:
-            break;
+            break;  // End of case 1, switch(SIGN)
+        default:    // default case, never occurs
+            break;  // End of default case, switch(SIGN)
         }
     }
-    else
+    else    // 0 < INDEX < 70
         POWER_METER.INDEX++;
 }
 
