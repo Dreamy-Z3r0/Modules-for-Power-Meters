@@ -17,6 +17,8 @@ COUNTER_typedef COUNTER =
 
 void TIMER_0_init(void)
 {
+    COUNTER.COUNT = 0;
+
 #ifndef TIMER_FIRST_RUN
 #define TIMER_FIRST_RUN 1
     TA0CTL |= TACLR;        // Clear configuration for Timer_A0
@@ -24,7 +26,7 @@ void TIMER_0_init(void)
     TA0CTL |=  TASSEL1;     // Set timer clock source to SMCLK (= 16.384MHz)
     TA0CTL &= ~TASSEL0;
 
-    TA0CTL &= ~(ID1 | ID0);  // Set input divider for clock source to 1 => CLOCK = 16.384MHz
+    TA0CTL |= (ID1 | ID0);  // Set input divider for clock source to 8 => CLOCK = SMCLK/8 = 2.048MHz
 
     TA0CTL |=  MC1;     // Timer_A0 operates in continuous mode
     TA0CTL &= ~MC0;
@@ -33,8 +35,6 @@ void TIMER_0_init(void)
 #else
     TA0CTL |= MC1;      // Start Timer_A0 is setting operation mode.
 #endif
-
-    COUNTER.COUNT = 0;
 }
 
 void TIMER_0_stop(void)
